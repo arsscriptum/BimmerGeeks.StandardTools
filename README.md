@@ -1,3 +1,9 @@
+## Recombination
+
+```
+  .\makedoc.ps1 -Combine
+```
+
 ## INSTALL INSTRUCTIONS IN BIMMERGEEKS STANDARD TOOLS
 
 1. Run St212.exe using all default settings except the 4 checkbox options in the "select additional task" window regarding "backup and restore" and "create desktop/quick launch icons" . 
