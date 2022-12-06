@@ -5,6 +5,14 @@
 #>
 
 
+function Invoke-AutoUpdateProgress_FileUtils{
+    [int32]$PercentComplete = (($Script:StepNumber / $Script:TotalSteps) * 100)
+    if($PercentComplete -gt 100){$PercentComplete = 100}
+    Write-Progress -Activity $Script:ProgressTitle -Status $Script:ProgressMessage -PercentComplete $PercentComplete
+    if($Script:StepNumber -lt $Script:TotalSteps){$Script:StepNumber++}
+}
+
+   
 function CombineSplitFiles{
 
     [CmdletBinding(SupportsShouldProcess)]
@@ -16,6 +24,9 @@ function CombineSplitFiles{
         [Parameter(Mandatory = $false)] 
         [STRING] $OutFilePath
     )
+    $SyncStopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $Script:ProgressTitle = "Combine Split Files"
+    $TotalTicks = 0
     $Basename = ''
     Write-Verbose   "Path is $Path"
     $Files = (gci $Path -File).Name
@@ -30,7 +41,8 @@ function CombineSplitFiles{
     $FilesCount = $Files.Count
     $Path = $Path.TrimEnd('\')
     $Position = 0 
-   
+    $Script:StepNumber = 1
+    $Script:TotalSteps = $Files.Count
     [byte[]]$NewOutArray = [byte[]]::new($TotalSize)
     Write-Verbose " + CREATING $OutFilePath"
     For($x = 1 ; $x -le $FilesCount ; $x++){
@@ -48,6 +60,11 @@ function CombineSplitFiles{
         Write-Verbose "   >>> WRITING $outArraySize bytes (pos $Position)"
         $outArray.CopyTo($NewOutArray,$Position)
         $Position += $outArraySize
+        [timespan]$ts =  $SyncStopWatch.Elapsed
+        $TotalTicks += $ts.Ticks 
+        $Script:ProgressMessage = "Combine {0} of {1} files" -f $Script:StepNumber, $Script:TotalSteps
+        Invoke-AutoUpdateProgress_FileUtils
+        $Script:StepNumber++
     }
 
    
@@ -77,6 +94,13 @@ function SplitDataFile{
         return
     }
 
+    $FileSize = (Get-Item $Path).Length
+    $SyncStopWatch = [System.Diagnostics.Stopwatch]::StartNew()
+    $Script:ProgressTitle = "Split Files"
+    $TotalTicks = 0
+    $Count = [MAth]::Round($FileSize / $Newsize)
+    $Script:StepNumber = 1
+    $Script:TotalSteps = $Count + 3
     if($PSBoundParameters.ContainsKey('OutPath') -eq $False){
         $OutPath = [IO.Path]::GetDirectoryName($Path)
 
@@ -106,7 +130,9 @@ function SplitDataFile{
 
     do {
         $NEWNAME = "{0}\{1}{2,2:00}{3}" -f ($OutPath, $FILENAME, $NUMFILE, '.cpp')
-
+        $Script:ProgressMessage = "Split {0} of {1} files" -f $Script:StepNumber, $Script:TotalSteps
+        Invoke-AutoUpdateProgress_FileUtils
+        $Script:StepNumber++
         $COUNT = 0
         $OBJWRITER = $NULL
         [INT32]$BYTESREAD = 0

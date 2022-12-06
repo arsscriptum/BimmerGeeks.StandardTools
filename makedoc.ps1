@@ -31,7 +31,7 @@ try{
     $DataPath = Join-Path $MakeScriptPath 'data'
     $FileUtilsScriptPath = Join-Path $ScriptsPath 'FileUtils.ps1'
     $DataFilePath = Join-Path $PackagePath 'BimmerGeeksStandardTools.7z'
-    $CombinedDataFilePath = Join-Path $PackagePath 'CombinedBimmerGeeksStandardTools.7z'
+    $CombinedDataFilePath = Join-Path $PackagePath 'BimmerGeeksStandardTools.7z'
     $SizeDataFile = Join-Path $DataPath 'Size.dat'
     . "$FileUtilsScriptPath"
     #===============================================================================
@@ -57,14 +57,14 @@ try{
    
     if($Combine){
         [int]$FileLength = Get-Content $SizeDataFile 
-        CombineSplitFiles -Path $DataPath -OutFilePath $CombinedDataFilePath -TotalSize $FileLength -Verbose
+        CombineSplitFiles -Path $DataPath -OutFilePath $CombinedDataFilePath -TotalSize $FileLength 
     }
     elseif($Divide){
         if(-not (Test-Path -Path "$DataFilePath")){ throw "Cannot DIvide: no file $DataFilePath" }
         $FileLength = (gi -Path "$DataFilePath").Length
         $Newsize = 5MB
         
-        SplitDataFile -Path $DataFilePath -Newsize 1Mb -OutPath $DataPath -AsString -Verbose
+        SplitDataFile -Path $DataFilePath -Newsize 1Mb -OutPath $DataPath -AsString 
         Set-Content $SizeDataFile -Value $FileLength
     }
     
